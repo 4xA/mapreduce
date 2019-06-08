@@ -4,6 +4,11 @@ import java.io.*;
 
 public class Node {
     private Process process;
+    private int port;
+
+    public Node(int port) {
+        this.port = port;
+    }
 
     // process is not created at object instantiation
     // for performance optimization
@@ -16,9 +21,10 @@ public class Node {
         String className = klass.getCanonicalName();
 
         ProcessBuilder builder = new ProcessBuilder(
-                javaBin, "-cp", classpath, className);
+                javaBin, "-cp", classpath, className, String.format("%d", port));
 
         builder.redirectErrorStream();
+
 
         try {
             this.process = builder.start();
@@ -29,5 +35,13 @@ public class Node {
 
     public Process getProcess() {
         return process;
+    }
+
+    public void stopProcess() {
+        this.process.destroyForcibly();
+    }
+
+    public int getPort() {
+        return port;
     }
 }

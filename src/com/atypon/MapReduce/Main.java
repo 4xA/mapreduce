@@ -8,11 +8,11 @@ public class Main {
         JobConfig config = new JobConfig();
 
         config.setInputMethod(JobConfig.FILE);
-//        config.setFileName("test.txt");
-//        config.setSplitters(":", "-", ".", "***");
-        config.setFileName("input.txt");
-        config.setSplitters(String.format("%n"));
-        config.setMapNodesCount(10);
+        config.setFileName("test.txt");
+        config.setSplitters(":", "-", ".", "***");
+//        config.setFileName("input.txt");
+//        config.setSplitters(String.format("%n"));
+        config.setMapNodesCount(2);
 
         Job job = new Job(config);
         job.start();

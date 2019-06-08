@@ -1,6 +1,7 @@
 package com.atypon.MapReduce.core;
 
 import com.atypon.MapReduce.io.NodeIOHandler;
+import com.atypon.MapReduce.io.NodeSocketHandler;
 import com.atypon.MapReduce.node.MapNode;
 import com.atypon.MapReduce.node.Node;
 import com.atypon.MapReduce.util.InputReader;
@@ -13,6 +14,7 @@ public class Job {
     private ArrayList<String> input;
     private MapNode[] mapNodes;
     private NodeIOHandler[] mapIOHandlers;
+    private NodeSocketHandler[] mapSocketHandlers;
 
     public Job(JobConfig config) {
         this.config = config;
@@ -36,29 +38,17 @@ public class Job {
         mapNodes = createMapNodes();
 
         // Wrap Map Nodes in IO handlers
-         mapIOHandlers = wrapIOHandlers(mapNodes);
+        mapSocketHandlers = wrapNodeSocketHandlers(mapNodes);
 
-         // Write splitted input to map nodes
+         // Write split input to map nodes
         writeToMapNodes();
 
-         for (NodeIOHandler h : mapIOHandlers) {
-//             h.writeToProcess(
-//                     new ArrayList<String>() {{
-//                         add("HELLO PLZ W0RK\n");
-//                         add("I ActuALLy good\n");
-//                         add("PLZ Do Ting\n");
-//                         add("And aLso do me nic graphics\n");
-//                         add("PLZ\n");
-//                     }}
-//             );
+        // Read from map nodes (connection confirmation)
+        String s = readFromMapNodes();
+        System.out.println(s);
 
-             ArrayList<String> list;
-
-             while ((list = h.readFromProcess(2)).size() > 0)
-                for (String s : list)
-                    System.out.println(s);
-         }
-
+        // Close all map assets
+        destroyMapNodes();
     }
 
     private void readInput() {
@@ -69,7 +59,7 @@ public class Job {
         ArrayList<String> words = new ArrayList<String>();
 
         for (String s : input)
-            words.addAll(Splitter.split(s, ":", "-", ".", "***"));
+            words.addAll(Splitter.split(s, config.getSplitters()));
 
         input = words;
     }
@@ -77,8 +67,9 @@ public class Job {
     private MapNode[] createMapNodes() {
         MapNode[] nodes = new MapNode[config.getMapNodesCount()];
 
+        int port = 9000;
         for (int i = 0; i < config.getMapNodesCount(); i++) {
-            nodes[i] = new MapNode();
+            nodes[i] = new MapNode(port++);
             nodes[i].createMapNode();
         }
 
@@ -90,6 +81,15 @@ public class Job {
 
         for (int i = 0; i < nodes.length; i++)
             handlers[i] = new NodeIOHandler(nodes[i]);
+
+        return handlers;
+    }
+
+    private NodeSocketHandler[] wrapNodeSocketHandlers(Node[] nodes) {
+         NodeSocketHandler[] handlers = new NodeSocketHandler[nodes.length];
+
+        for (int i = 0; i < nodes.length; i++)
+            handlers[i] = new NodeSocketHandler(nodes[i]);
 
         return handlers;
     }
@@ -107,11 +107,32 @@ public class Job {
         for (int i = 0; i < nodeCount; i++) {
             int endIndex = startIndex + countPerNode[i];
 
-            mapIOHandlers[i].writeToProcess(
+            mapSocketHandlers[i].writeToProcess(
                     input.subList(startIndex, endIndex)
             );
 
+            mapSocketHandlers[i].writeToProcess(
+                    new ArrayList<String>() {{ add("END"); }}
+            );
+
             startIndex = endIndex;
+        }
+    }
+
+    private String readFromMapNodes() {
+        StringBuilder sb = new StringBuilder();
+
+        for (NodeSocketHandler h : mapSocketHandlers) {
+            for (String s : h.readFromProcess(Integer.MAX_VALUE))
+                sb.append(s);
+        }
+
+        return sb.toString();
+    }
+
+    private void destroyMapNodes() {
+        for (NodeSocketHandler h : mapSocketHandlers) {
+            h.end();
         }
     }
 }

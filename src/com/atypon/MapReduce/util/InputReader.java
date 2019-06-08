@@ -19,7 +19,7 @@ public class InputReader {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
             while((line = bufferedReader.readLine()) != null)
-                list.add(line);
+                list.add(line.replace("\uFEFF", ""));
 
             bufferedReader.close();
         }
