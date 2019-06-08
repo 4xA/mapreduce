@@ -7,6 +7,7 @@ import com.atypon.MapReduce.node.Node;
 import com.atypon.MapReduce.util.InputReader;
 import com.atypon.MapReduce.util.Splitter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Job {
@@ -67,10 +68,21 @@ public class Job {
     private MapNode[] createMapNodes() {
         MapNode[] nodes = new MapNode[config.getMapNodesCount()];
 
-        int port = 9000;
+        int port = 6000;
         for (int i = 0; i < config.getMapNodesCount(); i++) {
             nodes[i] = new MapNode(port++);
-            nodes[i].createMapNode();
+
+            // try other ports if used by other program (Handle IOException)
+            for (int j = port; j < 65535; j++) {
+                try {
+                    nodes[i].createMapNode();
+                    break;
+                } catch (IOException e) {
+                    System.out.println("Port busy\nTrying new port...");
+                    port++;
+                    continue;
+                }
+            }
         }
 
         return nodes;

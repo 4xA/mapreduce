@@ -1,5 +1,7 @@
 package com.atypon.Map;
 
+import com.atypon.Globals;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,16 +17,23 @@ public class MapperServer {
     private BufferedReader in;
 
     public void start(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
+        try {
+            serverSocket = new ServerSocket(port);
+        } catch (IOException e) {
+            throw new IOException(port + "");
+        }
         clientSocket = serverSocket.accept();
 
         out = new PrintWriter(clientSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-            out.println(inputLine);
-        }
+        // Send connection acknowledgment
+        out.println(Globals.ACK_MSG);
+
+        // Debug
+        out.println(String.format("DEBUG: Server running at port (%d)", port));
+
+        read();
     }
 
     public void stop() throws IOException {
@@ -34,15 +43,28 @@ public class MapperServer {
         serverSocket.close();
     }
 
+    private void read() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+            if (inputLine.equals(Globals.END_MSG)) {
+                out.println(String.format("DEBUG: %s", sb.toString()));
+                stop();
+            }
+
+            sb.append(inputLine);
+        }
+    }
+
     public static void main(String[] args) {
         int port;
         if (args.length == 1)
             port = Integer.parseInt(args[0]);
         else
-            port = 6000 + count;
+            port = 6000 + count++;
 
         try {
-            new MapperServer().start(6000);
+            new MapperServer().start(port);
         } catch (IOException e) {
             e.printStackTrace();
         }

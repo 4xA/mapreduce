@@ -12,9 +12,10 @@ public class Node {
 
     // process is not created at object instantiation
     // for performance optimization
-    protected void createProcess(Class klass) {
-        // TODO: make this environment independent
-         String javaBin = File.separator + "usr" +
+    protected void createProcess(Class klass) throws IOException {
+        String binPath = System.getProperty("java.home");
+
+        String javaBin = binPath +
                 File.separator + "bin" +
                 File.separator + "java";
         String classpath = System.getProperty("java.class.path");
@@ -25,12 +26,7 @@ public class Node {
 
         builder.redirectErrorStream();
 
-
-        try {
-            this.process = builder.start();
-        } catch (IOException e) {
-            System.out.println("Could not create node");
-        }
+        this.process = builder.start();
     }
 
     public Process getProcess() {

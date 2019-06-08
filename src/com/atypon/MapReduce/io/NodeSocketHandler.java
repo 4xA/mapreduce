@@ -1,5 +1,6 @@
 package com.atypon.MapReduce.io;
 
+import com.atypon.Globals;
 import com.atypon.MapReduce.node.Node;
 
 import java.io.BufferedReader;
@@ -61,7 +62,7 @@ public class NodeSocketHandler {
             String s;
             // TODO: make "END" env variable
             while (throttle-- > 0 && (s = in.readLine()) != null && !s.equals("END"))
-                list.add(s);
+                list.add(String.format("%s%n", s));
         } catch (IOException e) {
             System.out.println(e.getMessage());
             System.out.println("IOException reading from node");
@@ -72,6 +73,7 @@ public class NodeSocketHandler {
 
     public void end() {
         try {
+            writeToProcess(new ArrayList() {{ add(Globals.END_MSG); }});
             clientSocket.close();
         } catch (IOException e) {
             System.out.println(e.getMessage());
