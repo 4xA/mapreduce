@@ -47,7 +47,9 @@ public class MapperServer {
         StringBuilder sb = new StringBuilder();
         String inputLine;
         while ((inputLine = in.readLine()) != null) {
-            if (inputLine.equals(Globals.END_MSG)) {
+
+            // STOP SIGNAL
+            if (inputLine.equals(Globals.EOI_MSG)) {
                 out.println(String.format("DEBUG: %s", sb.toString()));
                 stop();
             }

@@ -1,9 +1,6 @@
 package com.atypon.MapReduce.core;
 
-import com.atypon.MapReduce.io.NodeIOHandler;
-import com.atypon.MapReduce.io.NodeSocketHandler;
 import com.atypon.MapReduce.node.MapNode;
-import com.atypon.MapReduce.node.Node;
 import com.atypon.MapReduce.util.InputReader;
 import com.atypon.MapReduce.util.Splitter;
 
@@ -14,8 +11,6 @@ public class Job {
     private JobConfig config;
     private ArrayList<String> input;
     private MapNode[] mapNodes;
-    private NodeIOHandler[] mapIOHandlers;
-    private NodeSocketHandler[] mapSocketHandlers;
 
     public Job(JobConfig config) {
         this.config = config;
@@ -38,9 +33,6 @@ public class Job {
         // Create Map Nodes
         mapNodes = createMapNodes();
 
-        // Wrap Map Nodes in IO handlers
-        mapSocketHandlers = wrapNodeSocketHandlers(mapNodes);
-
          // Write split input to map nodes
         writeToMapNodes();
 
@@ -48,7 +40,7 @@ public class Job {
         String s = readFromMapNodes();
         System.out.println(s);
 
-        // Close all map assets
+        // End map node
         destroyMapNodes();
     }
 
@@ -88,24 +80,6 @@ public class Job {
         return nodes;
     }
 
-    private NodeIOHandler[] wrapIOHandlers(Node[] nodes) {
-        NodeIOHandler[] handlers = new NodeIOHandler[nodes.length];
-
-        for (int i = 0; i < nodes.length; i++)
-            handlers[i] = new NodeIOHandler(nodes[i]);
-
-        return handlers;
-    }
-
-    private NodeSocketHandler[] wrapNodeSocketHandlers(Node[] nodes) {
-         NodeSocketHandler[] handlers = new NodeSocketHandler[nodes.length];
-
-        for (int i = 0; i < nodes.length; i++)
-            handlers[i] = new NodeSocketHandler(nodes[i]);
-
-        return handlers;
-    }
-
     private void writeToMapNodes() {
         double count = input.size();
         int nodeCount = config.getMapNodesCount();
@@ -119,13 +93,7 @@ public class Job {
         for (int i = 0; i < nodeCount; i++) {
             int endIndex = startIndex + countPerNode[i];
 
-            mapSocketHandlers[i].writeToProcess(
-                    input.subList(startIndex, endIndex)
-            );
-
-            mapSocketHandlers[i].writeToProcess(
-                    new ArrayList<String>() {{ add("END"); }}
-            );
+            mapNodes[i].send(input.subList(startIndex, endIndex));
 
             startIndex = endIndex;
         }
@@ -134,17 +102,15 @@ public class Job {
     private String readFromMapNodes() {
         StringBuilder sb = new StringBuilder();
 
-        for (NodeSocketHandler h : mapSocketHandlers) {
-            for (String s : h.readFromProcess(Integer.MAX_VALUE))
+        for (MapNode m : mapNodes)
+            for (String s : m.receive(Integer.MAX_VALUE))
                 sb.append(s);
-        }
 
         return sb.toString();
     }
 
     private void destroyMapNodes() {
-        for (NodeSocketHandler h : mapSocketHandlers) {
-            h.end();
-        }
+        for (MapNode m : mapNodes)
+            m.destroy();
     }
 }

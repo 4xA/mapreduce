@@ -13,7 +13,7 @@ public class Main {
         config.setSplitters(Globals.SPLITTERS);
 //        config.setFileName("input.txt");
 //        config.setSplitters(String.format("%n"));
-        config.setMapNodesCount(3);
+        config.setMapNodesCount(10);
 
         Job job = new Job(config);
         job.start();

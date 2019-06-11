@@ -6,5 +6,6 @@ public class Globals {
 
     // Server Communication
     public static final String ACK_MSG = "ACK";
+    public static final String EOI_MSG = "EOI";
     public static final String END_MSG = "END";
 }

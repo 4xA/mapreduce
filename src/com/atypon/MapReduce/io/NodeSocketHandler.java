@@ -61,7 +61,7 @@ public class NodeSocketHandler {
         try {
             String s;
             // TODO: make "END" env variable
-            while (throttle-- > 0 && (s = in.readLine()) != null && !s.equals("END"))
+            while (throttle-- > 0 && (s = in.readLine()) != null && !s.equals(Globals.EOI_MSG))
                 list.add(String.format("%s%n", s));
         } catch (IOException e) {
             System.out.println(e.getMessage());

@@ -1,10 +1,16 @@
 package com.atypon.MapReduce.node;
 
+import com.atypon.Globals;
+import com.atypon.MapReduce.io.NodeSocketHandler;
+
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Node {
     private Process process;
     private int port;
+    protected NodeSocketHandler socketHandler;
 
     public Node(int port) {
         this.port = port;
@@ -27,6 +33,8 @@ public class Node {
         builder.redirectErrorStream();
 
         this.process = builder.start();
+
+        this.socketHandler = new NodeSocketHandler(this);
     }
 
     public Process getProcess() {
@@ -40,4 +48,30 @@ public class Node {
     public int getPort() {
         return port;
     }
+
+    // Server operations
+    public <T> void send(List<T> l) {
+        socketHandler.writeToProcess(l);
+        sendSignal(Globals.EOI_MSG);
+    }
+
+    public void sendSignal(String signal) {
+        socketHandler.writeToProcess(
+                 new ArrayList<String>() {{ add(signal); }}
+         );
+    }
+
+    public ArrayList<String> receive(int max) {
+        return socketHandler.readFromProcess(max);
+    }
+
+    public void destroy() {
+        socketHandler.writeToProcess(
+                new ArrayList<String>() {{ add(Globals.END_MSG); }}
+        );
+
+        socketHandler.end();
+    }
+
+    // End of server operations
 }
