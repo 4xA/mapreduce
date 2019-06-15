@@ -2,19 +2,18 @@ package com.atypon.Map;
 
 import com.atypon.Globals;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class MapperServer {
-    private static int count = 0;
     private ServerSocket serverSocket;
     private Socket clientSocket;
-    private PrintWriter out;
     private BufferedReader in;
+    private ObjectOutputStream objOut;
+
+    private final ArrayList<Pair> list = new ArrayList<Pair>();
 
     public void start(int port) throws IOException {
         try {
@@ -24,46 +23,39 @@ public class MapperServer {
         }
         clientSocket = serverSocket.accept();
 
-        out = new PrintWriter(clientSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-        // Send connection acknowledgment
-        out.println(Globals.ACK_MSG);
-
-        // Debug
-        out.println(String.format("DEBUG: Server running at port (%d)", port));
+        objOut = new ObjectOutputStream(clientSocket.getOutputStream());
 
         read();
     }
 
     public void stop() throws IOException {
         in.close();
-        out.close();
+        objOut.close();
         clientSocket.close();
         serverSocket.close();
     }
 
     private void read() throws IOException {
-        StringBuilder sb = new StringBuilder();
+        Object value;
+
         String inputLine;
         while ((inputLine = in.readLine()) != null) {
 
             // STOP SIGNAL
             if (inputLine.equals(Globals.EOI_MSG)) {
-                out.println(String.format("DEBUG: %s", sb.toString()));
+                objOut.writeObject(list);
+
                 stop();
             }
 
-            sb.append(inputLine);
+            value = Mapper.map(inputLine);
+            list.add(new Pair(inputLine, new Object[] { value }));
         }
     }
 
     public static void main(String[] args) {
-        int port;
-        if (args.length == 1)
-            port = Integer.parseInt(args[0]);
-        else
-            port = 6000 + count++;
+        int port = Integer.parseInt(args[0]);
 
         try {
             new MapperServer().start(port);

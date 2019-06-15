@@ -5,6 +5,9 @@ import com.atypon.MapReduce.node.Node;
 import java.io.*;
 import java.util.ArrayList;
 
+/**
+ * Deprecated
+ */
 public class NodeIOHandler {
     private Node node;
     private Process process;

@@ -1,19 +1,29 @@
 package com.atypon.MapReduce.core;
 
+import com.atypon.Globals;
+import com.atypon.Map.Pair;
 import com.atypon.MapReduce.node.MapNode;
+import com.atypon.MapReduce.node.Node;
+import com.atypon.MapReduce.node.ReduceNode;
 import com.atypon.MapReduce.util.InputReader;
 import com.atypon.MapReduce.util.Splitter;
 
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.List;
 
-public class Job {
+public class Job implements java.io.Serializable {
     private JobConfig config;
     private ArrayList<String> input;
     private MapNode[] mapNodes;
+    private ReduceNode[] reduceNodes;
 
     public Job(JobConfig config) {
         this.config = config;
+        mapNodes = new MapNode[this.config.getMapNodesCount()];
+        reduceNodes = new ReduceNode[this.config.getReduceNodesCount()];
     }
 
     public void start() {
@@ -30,18 +40,12 @@ public class Job {
         for (String s : input)
             System.out.println(s);
 
-        // Create Map Nodes
-        mapNodes = createMapNodes();
+        createMapNodes();
+        input = null; // clear memory
+        createReduceNodes();
 
-         // Write split input to map nodes
-        writeToMapNodes();
-
-        // Read from map nodes (connection confirmation)
-        String s = readFromMapNodes();
-        System.out.println(s);
-
-        // End map node
-        destroyMapNodes();
+        stopNodes(mapNodes);
+        stopNodes(reduceNodes);
     }
 
     private void readInput() {
@@ -52,35 +56,13 @@ public class Job {
         ArrayList<String> words = new ArrayList<String>();
 
         for (String s : input)
-            words.addAll(Splitter.split(s, config.getSplitters()));
+            words.addAll(Splitter.split(s, config.getSplitterRegex()));
 
         input = words;
     }
 
-    private MapNode[] createMapNodes() {
-        MapNode[] nodes = new MapNode[config.getMapNodesCount()];
-
-        int port = 6000;
-        for (int i = 0; i < config.getMapNodesCount(); i++) {
-            nodes[i] = new MapNode(port++);
-
-            // try other ports if used by other program (Handle IOException)
-            for (int j = port; j < 65535; j++) {
-                try {
-                    nodes[i].createMapNode();
-                    break;
-                } catch (IOException e) {
-                    System.out.println("Port busy\nTrying new port...");
-                    port++;
-                    continue;
-                }
-            }
-        }
-
-        return nodes;
-    }
-
-    private void writeToMapNodes() {
+    private void createMapNodes() {
+        // TODO: only create needed nodes
         double count = input.size();
         int nodeCount = config.getMapNodesCount();
         int countPerNode[] = new int[nodeCount];
@@ -88,29 +70,34 @@ public class Job {
         for (int i = 0; i < nodeCount; i++)
             countPerNode[i] = (int) ( Math.floor(count / nodeCount) + (i+1 <= count%nodeCount ? 1 : 0) );
 
-        // distribute
         int startIndex = 0;
         for (int i = 0; i < nodeCount; i++) {
             int endIndex = startIndex + countPerNode[i];
 
-            mapNodes[i].send(input.subList(startIndex, endIndex));
+            mapNodes[i] = new MapNode(
+                    config.getMapServerPort() + i,
+                    input.subList(startIndex, endIndex).toArray(new String[0])
+            );
+
+            mapNodes[i].run();
 
             startIndex = endIndex;
         }
     }
 
-    private String readFromMapNodes() {
-        StringBuilder sb = new StringBuilder();
+    private void createReduceNodes()  {
+        // TODO: only create needed nodes
 
-        for (MapNode m : mapNodes)
-            for (String s : m.receive(Integer.MAX_VALUE))
-                sb.append(s);
+        int port = config.getReduceServerPort();
 
-        return sb.toString();
+        for (int i = 0; i < config.getReduceNodesCount(); i++) {
+            reduceNodes[i] = new ReduceNode(port++);
+            reduceNodes[i].run();
+        }
     }
 
-    private void destroyMapNodes() {
-        for (MapNode m : mapNodes)
-            m.destroy();
+    private void stopNodes(Node[] nodes) {
+        for (Node n : nodes)
+            n.destroy();
     }
 }

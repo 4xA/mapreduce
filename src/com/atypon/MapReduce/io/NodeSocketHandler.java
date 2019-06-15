@@ -3,10 +3,7 @@ package com.atypon.MapReduce.io;
 import com.atypon.Globals;
 import com.atypon.MapReduce.node.Node;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -18,10 +15,12 @@ public class NodeSocketHandler {
     private PrintWriter out;
     private BufferedReader in;
 
+    private ObjectInputStream objIn;
+    private ObjectOutputStream objOut;
+
     public NodeSocketHandler(Node node) {
         if (node == null)
             throw new IllegalArgumentException("Node passed to IO handler is null");
-
         this.node = node;
         port = node.getPort();
         try {
@@ -33,52 +32,99 @@ public class NodeSocketHandler {
                     continue;
                 }
             }
-
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (IOException e) {
             System.out.println("Could not establish server connection at port: " + port);
         }
     }
 
-    public NodeSocketHandler writeToProcess(Iterable text) {
+    public NodeSocketHandler writeTextToProcess(String[] text) {
         // TODO: should use thread?
         // TODO: throttle input so not to overload heap
-        for (Object o : text)
-            out.println(o.toString());
+        for (String s : text)
+            out.println(s);
+        out.flush();
 
         return this;
     }
 
+    public NodeSocketHandler writeToProcess(Object o) {
+        try {
+            objOut.writeObject(o);
+        } catch (IOException e) {
+            System.out.println("Could not write object to process");
+            e.printStackTrace();
+            System.out.println(e);
+        }
+
+        return this;
+    }
+
+    public Object readObjectFromProcess() {
+        try {
+            return objIn.readObject();
+        } catch (IOException e) {
+            System.out.println(e);
+            System.out.println("Error reading object");
+        } catch (ClassNotFoundException e) {
+            System.out.println(e);
+        }
+
+        return null;
+    }
+
+    // Deprecated
     // throttle is used as a balance between the advantage of
     // buffered read while not overloading memory
-    public ArrayList<String> readFromProcess(int throttle) {
+    public ArrayList<String> readTextFromProcess(int throttle) {
         // TODO: should use thread?
         // TODO: test throttle
 
         ArrayList<String> list = new ArrayList<String>();
 
         try {
-            String s;
             // TODO: make "END" env variable
+            String s;
             while (throttle-- > 0 && (s = in.readLine()) != null && !s.equals(Globals.EOI_MSG))
                 list.add(String.format("%s%n", s));
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e);
             System.out.println("IOException reading from node");
         }
 
         return list;
     }
 
+    public void createStringOutputStream() {
+        try {
+            out = new PrintWriter(this.clientSocket.getOutputStream(), true);
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
+    public void createObjectOutputStream() {
+        try {
+            this.objOut = new ObjectOutputStream(this.clientSocket.getOutputStream());
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
+    public void createObjectInputStream() {
+        try {
+            this.objIn = new ObjectInputStream(this.clientSocket.getInputStream());
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
     public void end() {
         try {
-            writeToProcess(new ArrayList() {{ add(Globals.END_MSG); }});
-            clientSocket.close();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+            if (out != null)    out.close();
+            if (objIn != null)  objIn.close();
+            if (objOut != null) objOut.close();
+        } catch(IOException e) {
+            System.out.println(e);
         }
-
-        node.stopProcess();
     }
 }

@@ -4,13 +4,11 @@ import com.atypon.Globals;
 import com.atypon.MapReduce.io.NodeSocketHandler;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Node {
     private Process process;
     private int port;
-    protected NodeSocketHandler socketHandler;
+    private NodeSocketHandler socketHandler;
 
     public Node(int port) {
         this.port = port;
@@ -33,7 +31,6 @@ public class Node {
         builder.redirectErrorStream();
 
         this.process = builder.start();
-
         this.socketHandler = new NodeSocketHandler(this);
     }
 
@@ -41,37 +38,41 @@ public class Node {
         return process;
     }
 
-    public void stopProcess() {
-        this.process.destroyForcibly();
-    }
-
     public int getPort() {
         return port;
     }
 
+    public NodeSocketHandler getNodeSocketHandler() {
+        return socketHandler;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
     // Server operations
-    public <T> void send(List<T> l) {
-        socketHandler.writeToProcess(l);
+    public void sendText(String[] l) {
+        socketHandler.writeTextToProcess(l);
         sendSignal(Globals.EOI_MSG);
     }
 
+    public void send(Object object) {
+        socketHandler.writeToProcess(object);
+    }
+
     public void sendSignal(String signal) {
-        socketHandler.writeToProcess(
-                 new ArrayList<String>() {{ add(signal); }}
+        socketHandler.writeTextToProcess(
+                new String[] { signal }
          );
     }
 
-    public ArrayList<String> receive(int max) {
-        return socketHandler.readFromProcess(max);
+    public Object receive() {
+        return socketHandler.readObjectFromProcess();
     }
 
     public void destroy() {
-        socketHandler.writeToProcess(
-                new ArrayList<String>() {{ add(Globals.END_MSG); }}
-        );
-
         socketHandler.end();
+        this.process.destroyForcibly();
     }
-
     // End of server operations
 }
