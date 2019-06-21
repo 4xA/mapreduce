@@ -5,20 +5,24 @@ import com.atypon.Map.Pair;
 import com.atypon.Reduce.ReduceServer;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ReduceNode extends Node implements java.io.Serializable {
-    public ReduceNode(int port) {
+    Pair[] mappedData;
+
+    public ReduceNode(int port, Pair[] mappedData) {
         super(port);
+        this.mappedData = mappedData;
     }
 
     public void run() {
         createReduceNodeSafe();
 
         sendData();
-        System.out.println(receiveData());
-        System.out.println(receiveData());
-        System.out.println(receiveData());
+
+        Object o;
+        while (! ( o = receiveData() ).equals(Globals.EOF_MSG))
+            System.out.println(Arrays.toString((Object[]) o));
     }
 
     public void createReduceNode() throws IOException {
@@ -44,13 +48,7 @@ public class ReduceNode extends Node implements java.io.Serializable {
     }
 
     private void sendData() {
-        ArrayList<String> list = new ArrayList<String>() {{
-            add("let");
-            add("me");
-            add("tel");
-        }};
-
-        this.send(new Pair("Hello", list.toArray()));
+        this.send(mappedData);
     }
 
     private Object receiveData() {
@@ -62,5 +60,10 @@ public class ReduceNode extends Node implements java.io.Serializable {
     public void destroy() {
         this.send(Globals.END_MSG);
         super.destroy();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("{ReduceNode: Port=%d}", this.getPort());
     }
 }

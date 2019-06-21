@@ -2,11 +2,15 @@ package com.atypon.MapReduce.node;
 
 import com.atypon.Globals;
 import com.atypon.Map.MapperServer;
+import com.atypon.Map.Pair;
 
 import java.io.IOException;
 
 public class MapNode extends Node implements java.io.Serializable {
     private String[] data;
+    private Pair[] mappedData;
+    private int[] ports;
+    private int numReduceNodes;
 
     public MapNode(int port, String[] data) {
         super(port);
@@ -15,8 +19,13 @@ public class MapNode extends Node implements java.io.Serializable {
 
     public void run() {
         createMapNodeSafe();
+//        sendNumReduceNodes();
+//        sendPorts();
         sendData();
-        System.out.println(this.receive());
+//        System.out.println( this.receive() );
+//        System.out.println( this.receive() );
+
+        mappedData = (Pair[]) this.receive();
     }
 
     public void createMapNode() throws IOException {
@@ -41,6 +50,24 @@ public class MapNode extends Node implements java.io.Serializable {
         }
     }
 
+    private void sendNumReduceNodes() {
+        sendSignal(Globals.NRN_MSG);
+        sendText(new String[] { this.numReduceNodes + "" });
+    }
+
+    private void sendPorts() {
+        sendSignal(Globals.PRT_MSG);
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < ports.length-1; i++) {
+            sb.append(ports[i]).append(",");
+        }
+        sb.append(ports[ports.length-1]);
+
+        sendText(new String[] { sb.toString() });
+    }
+
     private void sendData() {
         sendText(data);
     }
@@ -49,5 +76,9 @@ public class MapNode extends Node implements java.io.Serializable {
     public void destroy() {
         sendText(new String[] { Globals.END_MSG });
         super.destroy();
+    }
+
+    public Pair[] getMappedData() {
+        return mappedData;
     }
 }

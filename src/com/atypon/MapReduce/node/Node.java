@@ -31,6 +31,12 @@ public class Node {
         builder.redirectErrorStream();
 
         this.process = builder.start();
+
+        this.socketHandler = new NodeSocketHandler(this);
+    }
+
+    public void createSocketHandler() {
+        // TODO: this function must be used carfuly. Review.
         this.socketHandler = new NodeSocketHandler(this);
     }
 
