@@ -10,7 +10,6 @@ public class MapNode extends Node implements java.io.Serializable {
     private String[] data;
     private Pair[] mappedData;
     private int[] ports;
-    private int numReduceNodes;
 
     public MapNode(int port, String[] data) {
         super(port);
@@ -19,16 +18,16 @@ public class MapNode extends Node implements java.io.Serializable {
 
     public void run() {
         createMapNodeSafe();
-//        sendNumReduceNodes();
-//        sendPorts();
         sendData();
-//        System.out.println( this.receive() );
-//        System.out.println( this.receive() );
 
-        mappedData = (Pair[]) this.receive();
+        this.mappedData = (Pair[]) this.receive();
+        this.setHeapMemoryUsed((long) this.receive());
+        this.destroy();
     }
 
     public void createMapNode() throws IOException {
+        this.setStartTime(System.currentTimeMillis());
+
         createProcess(MapperServer.class);
         this.getNodeSocketHandler().createStringOutputStream();
         this.getNodeSocketHandler().createObjectInputStream();
@@ -48,11 +47,6 @@ public class MapNode extends Node implements java.io.Serializable {
                 continue;
             }
         }
-    }
-
-    private void sendNumReduceNodes() {
-        sendSignal(Globals.NRN_MSG);
-        sendText(new String[] { this.numReduceNodes + "" });
     }
 
     private void sendPorts() {
@@ -76,6 +70,12 @@ public class MapNode extends Node implements java.io.Serializable {
     public void destroy() {
         sendText(new String[] { Globals.END_MSG });
         super.destroy();
+
+        this.setEndTime(System.currentTimeMillis());
+    }
+
+    public String[] getData() {
+        return data;
     }
 
     public Pair[] getMappedData() {

@@ -16,13 +16,19 @@ public class ReduceNode extends Node implements java.io.Serializable {
     }
 
     public void run() {
+        this.setStartTime(System.currentTimeMillis());
+
         createReduceNodeSafe();
 
         sendData();
 
         Object o;
-        while (! ( o = receiveData() ).equals(Globals.EOF_MSG))
+        while (! ( o = this.receiveData() ).equals(Globals.EOF_MSG))
             this.reducedData = (Pair[]) o;
+
+        this.setHeapMemoryUsed((long) this.receiveData());
+
+        this.destroy();
     }
 
     public void createReduceNode() throws IOException {
@@ -60,7 +66,11 @@ public class ReduceNode extends Node implements java.io.Serializable {
     public void destroy() {
         this.send(Globals.END_MSG);
         super.destroy();
+
+        this.setEndTime(System.currentTimeMillis());
     }
+
+    public Pair[] getMappedData() { return mappedData; }
 
     public Pair[] getReducedData() {
         return reducedData;

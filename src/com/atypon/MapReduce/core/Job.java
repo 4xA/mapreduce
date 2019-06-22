@@ -1,5 +1,6 @@
 package com.atypon.MapReduce.core;
 
+import com.atypon.Globals;
 import com.atypon.Map.Pair;
 import com.atypon.MapReduce.node.MapNode;
 import com.atypon.MapReduce.node.Node;
@@ -57,14 +58,17 @@ public class Job implements java.io.Serializable {
                 System.out.println(p);
 //            System.out.println(Arrays.toString(node.getReducedData()));
 
-        stopNodes(mapNodes);
-        stopNodes(reduceNodes);
-
         // Write output to file
-        FileOutputWriter writer = new FileOutputWriter();
+        FileOutputWriter writer = new FileOutputWriter(Globals.OUTPUT_FILE_NAME);
         for (ReduceNode node : reduceNodes)
             writer.write(node.getReducedData());
+        writer.close();
 
+        String performanceString = generatePerformanceAnalysisString();
+        System.out.println(performanceString);
+
+        writer = new FileOutputWriter(Globals.PERFORMANCE_FILE_NAME);
+        writer.write(performanceString);
         writer.close();
     }
 
@@ -177,5 +181,64 @@ public class Job implements java.io.Serializable {
     private void stopNodes(Node[] nodes) {
         for (Node n : nodes)
             n.destroy();
+    }
+
+    private String generatePerformanceAnalysisString() {
+        StringBuilder s = new StringBuilder("");
+
+        s.append("<<EXECUTION TIMES>>\n\n");
+
+        // Execution time per node
+        s.append("Execution time per Map Nodes (Process creation and destruction time overhead inclusive)\n");
+        for (int i = 0; i < mapNodes.length; i++)
+            s.append(
+                    String.format("\tMapNode[%d]: %s%n", i, mapNodes[i].getExcecutionTimeFormated())
+            );
+
+        s.append("\n");
+        s.append("Execution time per Reduce Nodes (Process creation and destruction time overhead inclusive)...\n");
+        for (int i = 0; i < reduceNodes.length; i++)
+            s.append(
+                    String.format("\tReduceNode[%d]: %s%n", i, reduceNodes[i].getExcecutionTimeFormated())
+            );
+
+        s.append("\n");
+
+        s.append("<<WORK DISTRIBUTION>>\n\n");
+
+        // Keys sent to map nodes
+        s.append("Number of keys sent to map nodes...\n");
+        for (int i = 0; i < mapNodes.length; i++)
+            s.append (
+                    String.format("\tMapNode[%d]: %d%n", i, mapNodes[i].getData().length)
+            );
+
+        s.append("\n");
+        // Combined mapped data sent to reduces nodes
+        s.append("Mapped keys sent to reduce nodes...\n");
+        for (int i = 0; i < reduceNodes.length; i++)
+            s.append(
+                    String.format("\tReduceNode[%d]: %d%n", i, reduceNodes[i].getMappedData().length)
+            );
+
+        s.append("\n");
+
+        s.append("<<MEMORY FOOTPRINT>>\n\n");
+
+        // Memory used per Node
+        s.append("Heap memory used per Map Node...\n");
+        for (int i = 0; i < mapNodes.length; i++)
+            s.append(
+                    String.format("\tMapNode[%d]: %d bytes%n", i, mapNodes[i].getHeapMemoryUsed())
+            );
+
+        s.append("\n");
+        s.append( "Heap memory used per Map Node...\n");
+        for (int i = 0; i < reduceNodes.length; i++)
+            s.append(
+                    String.format("\tReduceNode[%d]: %d bytes%n", i, reduceNodes[i].getHeapMemoryUsed())
+            );
+
+        return s.toString();
     }
 }

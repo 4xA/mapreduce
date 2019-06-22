@@ -4,11 +4,15 @@ import com.atypon.Globals;
 import com.atypon.MapReduce.io.NodeSocketHandler;
 
 import java.io.*;
+import java.util.concurrent.TimeUnit;
 
 public class Node {
     private Process process;
     private int port;
     private NodeSocketHandler socketHandler;
+    private long startTime;
+    private long endTime;
+    private long heapMemoryUsed;
 
     public Node(int port) {
         this.port = port;
@@ -52,8 +56,41 @@ public class Node {
         return socketHandler;
     }
 
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public String getExcecutionTimeFormated() {
+        long time = endTime - startTime;
+
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(time);
+        long milliseconds = time - TimeUnit.SECONDS.toMillis(seconds);
+
+        return String.format("%d.%d", seconds, milliseconds);
+    }
+
+    public long getHeapMemoryUsed() {
+        return heapMemoryUsed;
+    }
+
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setHeapMemoryUsed(long heapMemoryUsed) {
+        this.heapMemoryUsed = heapMemoryUsed;
     }
 
     // Server operations

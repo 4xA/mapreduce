@@ -6,6 +6,8 @@ import com.atypon.Map.Pair;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -69,6 +71,9 @@ public class ReduceThread extends Thread {
 
                     objOut.writeObject(sendPairs);
                     objOut.writeObject(Globals.EOF_MSG);
+
+                    MemoryUsage heapMemoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+                    objOut.writeObject(heapMemoryUsage.getUsed());
                 }
                 else {
                     System.out.println("reading...");

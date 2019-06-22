@@ -3,6 +3,7 @@ package com.atypon;
 public class Globals {
     public static final String INPUT_FILE_NAME = "input.txt";
     public static final String OUTPUT_FILE_NAME = "output.txt";
+    public static final String PERFORMANCE_FILE_NAME = "performance_analysis.txt";
 
     // Server Communication
     public static final String ACK_MSG = "ACK";

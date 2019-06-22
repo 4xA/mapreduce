@@ -4,6 +4,8 @@ import com.atypon.Globals;
 import com.atypon.MapReduce.node.ReduceNode;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -34,18 +36,11 @@ public class MapperServer {
         // Mapping
         read();
 
-        // connect
-//        connectToReduceNodes(portStrings);
-//        objOut.writeObject(new Pair(Globals.PRT_MSG, Arrays.toString(reduceNodes))); // TODO: remove: only for testing
-
         // Sorting
         sort(mappedData);
 
         // Print Output to main process
-        printOutput();
-
-        // Send data to Reduce Nodes
-        sendToReduceNodes();
+        writeOutput();
 
         // Stop Server
         stop();
@@ -100,26 +95,11 @@ public class MapperServer {
         Arrays.sort(pairs);
     }
 
-    private void printOutput() throws IOException {
+    private void writeOutput() throws IOException {
         objOut.writeObject(mappedData);
-    }
 
-    private void connectToReduceNodes(String[] ports) {
-        reduceNodes = new ReduceNode[ports.length];
-
-        for (int i = 0; i < reduceNodes.length; i++) {
-//            reduceNodes[i] = new ReduceNode(Integer.parseInt(ports[i]));
-//            reduceNodes[i].createSocketHandler();
-        }
-    }
-
-    private void sendToReduceNodes() {
-        int reduceNumber;
-        for (Pair p : mappedData) {
-            reduceNumber = (p.getKey().hashCode() & Integer.MAX_VALUE) % numReduceNodes;
-
-            reduceNodes[reduceNumber].send(p);
-        }
+        MemoryUsage heapMemoryUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        objOut.writeObject(heapMemoryUsage.getUsed());
     }
 
     public static void main(String[] args) {
