@@ -1,7 +1,6 @@
 package com.atypon.Map;
 
 import com.atypon.Globals;
-import com.atypon.MapReduce.node.ReduceNode;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -16,7 +15,6 @@ public class MapperServer {
     private Socket clientSocket;
     private BufferedReader in;
     private ObjectOutputStream objOut;
-    private ReduceNode[] reduceNodes;
     private int numReduceNodes;
     private String[] portStrings;
 
@@ -33,11 +31,11 @@ public class MapperServer {
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         objOut = new ObjectOutputStream(clientSocket.getOutputStream());
 
-        // Mapping
-        read();
+        // Read
+        String[] keys = read();
 
-        // Sorting
-        sort(mappedData);
+        // Map
+        mappedData = map(keys);
 
         // Print Output to main process
         writeOutput();
@@ -53,14 +51,12 @@ public class MapperServer {
         serverSocket.close();
     }
 
-    private void read() throws IOException {
-        Object value;
-
-        ArrayList<Pair> list = new ArrayList<Pair>();
+    private String[] read() throws IOException {
+        ArrayList<String> list = new ArrayList<String>();
 
         String inputLine;
+        Object o;
         while ((inputLine = in.readLine()) != null) {
-
             // STOP SIGNAL
             if (inputLine.equals(Globals.EOI_MSG)) {
                 break;
@@ -79,20 +75,56 @@ public class MapperServer {
             // Receive ports SIGNAL
             if (inputLine.equals(Globals.PRT_MSG)) {
                 portStrings = in.readLine().split(",");
+
                 // Ignore EOI signal
                 in.readLine();
                 continue;
             }
 
-            value = Mapper.map(inputLine);
-            list.add(new Pair(inputLine, value));
+            list.add(inputLine);
         }
 
-        mappedData = list.toArray(new Pair[0]);
+        return list.toArray(new String[0]);
     }
 
-    private static void sort(Pair[] pairs) {
-        Arrays.sort(pairs);
+    private Pair[] map(String[] keys) {
+        Pair[] ret = new Pair[keys.length];
+
+        int threadCount = 5;
+        Thread[] threads = new Thread[threadCount];
+        MapTask[] tasks = new MapTask[threadCount];
+
+        double count = keys.length;
+        int[] countPerThread = new int[threadCount];
+
+        for (int i = 0; i < threadCount; i++)
+            countPerThread[i] = (int) ( Math.floor(count / threadCount) + (i+1 <= count%threadCount ? 1 : 0) );
+
+        int startIndex = 0;
+        for (int i = 0; i < threadCount; i++) {
+            int endIndex = startIndex + countPerThread[i];
+
+            tasks[i] = new MapTask(Arrays.copyOfRange(keys, startIndex, endIndex));
+            threads[i] = new Thread(tasks[i]);
+            threads[i].start();
+
+            startIndex = endIndex;
+        }
+
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        int w = 0;
+        for (MapTask task : tasks)
+            for (Pair p : task.getMapped())
+                ret[w++] = p;
+
+        return ret;
     }
 
     private void writeOutput() throws IOException {

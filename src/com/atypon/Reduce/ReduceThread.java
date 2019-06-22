@@ -64,10 +64,7 @@ public class ReduceThread extends Thread {
 
                     Pair[] sendPairs = new Pair[list.size()];
 
-                    for (int i = 0; i < list.size(); i++) {
-                        p = list.get(i);
-                        sendPairs[i] = Reducer.reduce(p.getKey(), (Object[]) p.getValue());
-                    }
+                    sendPairs = reduce(list.toArray(new Pair[0]));
 
                     objOut.writeObject(sendPairs);
                     objOut.writeObject(Globals.EOF_MSG);
@@ -85,5 +82,45 @@ public class ReduceThread extends Thread {
                 continue;
             }
         }
+    }
+
+    private Pair[] reduce(Pair[] pairs) {
+        Pair[] ret = new Pair[pairs.length];
+
+        int threadCount = 5;
+        Thread[] threads = new Thread[threadCount];
+        ReduceTask[] tasks = new ReduceTask[threadCount];
+
+        double count = pairs.length;
+        int[] countPerThread = new int[threadCount];
+
+        for (int i = 0; i < threadCount; i++)
+            countPerThread[i] = (int) ( Math.floor(count / threadCount) + (i+1 <= count%threadCount ? 1 : 0) );
+
+        int startIndex = 0;
+        for (int i = 0; i < threadCount; i++) {
+            int endIndex = startIndex + countPerThread[i];
+
+            tasks[i] = new ReduceTask(Arrays.copyOfRange(pairs, startIndex, endIndex));
+            threads[i] = new Thread(tasks[i]);
+            threads[i].start();
+
+            startIndex = endIndex;
+        }
+
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        int w = 0;
+        for (ReduceTask task : tasks)
+            for (Pair p : task.getReduced())
+                ret[w++] = p;
+
+        return ret;
     }
 }

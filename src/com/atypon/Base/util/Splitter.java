@@ -1,4 +1,4 @@
-package com.atypon.MapReduce.util;
+package com.atypon.Base.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;

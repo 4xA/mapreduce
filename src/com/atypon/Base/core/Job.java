@@ -1,23 +1,25 @@
-package com.atypon.MapReduce.core;
+package com.atypon.Base.core;
 
 import com.atypon.Globals;
 import com.atypon.Map.Pair;
-import com.atypon.MapReduce.node.MapNode;
-import com.atypon.MapReduce.node.Node;
-import com.atypon.MapReduce.node.ReduceNode;
-import com.atypon.MapReduce.util.FileOutputWriter;
-import com.atypon.MapReduce.util.InputReader;
-import com.atypon.MapReduce.util.Splitter;
+import com.atypon.Base.node.MapNode;
+import com.atypon.Base.node.Node;
+import com.atypon.Base.node.ReduceNode;
+import com.atypon.Base.util.FileOutputWriter;
+import com.atypon.Base.util.InputReader;
+import com.atypon.Base.util.Splitter;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
-public class Job implements java.io.Serializable {
+public class Job {
     private JobConfig config;
     private ArrayList<String> input;
     private MapNode[] mapNodes;
     private ReduceNode[] reduceNodes;
-    private int[] reducePorts;
     private Pair[] mappedData;
+    private long startTime;
+    private long endTime;
 
     public Job(JobConfig config) {
         this.config = config;
@@ -26,44 +28,63 @@ public class Job implements java.io.Serializable {
     }
 
     public void start() {
+        this.startTime = System.currentTimeMillis();
+
         // Read input
         readInput();
-
-        for (String s : input)
-            System.out.println(s);
 
         // Split input
         // TODO: Split input should become a stream
         splitInput();
 
-        for (String s : input)
-            System.out.println(s);
-
         // Create Map Nodes
+        System.out.println("Creating and executing map nodes...");
         createMapNodes();
+
+        // Run Map Nodes
+        runNodes(mapNodes);
         input = null; // clear memory
 
         // Combine Data
+        System.out.println("\nCombining and partitioning data...");
+
         mappedData = combineData();
-        System.out.println(Arrays.toString(mappedData));
 
-        // Partition
-
+        for (int i = 0; i < mappedData.length && i < 20; i++) {
+            System.out.println(mappedData[i]);
+        }
+        if (mappedData.length > 20)
+            System.out.println("...\t[[TRIMMED]]\n"+ mappedData[mappedData.length-1]);
 
         // Create ReduceNodes Nodes
+        System.out.println("\nCreating and executing reduce nodes...");
         createReduceNodes();
+        runNodes(reduceNodes);
 
-        for (ReduceNode node : reduceNodes)
-            for (Pair p : node.getReducedData())
+        int reduceCount = 0;
+        outer: for (int i = 0; i < reduceNodes.length; i++) {
+            ReduceNode node = reduceNodes[i];
+
+            for (Pair p : node.getReducedData()) {
                 System.out.println(p);
-//            System.out.println(Arrays.toString(node.getReducedData()));
+                reduceCount++;
+                if (reduceCount > 20) {
+                    System.out.println("...\t[[TRIMMED]]");
+                    break outer;
+                }
+            }
+        }
 
         // Write output to file
+        System.out.println("\nWriting to output file...");
         FileOutputWriter writer = new FileOutputWriter(Globals.OUTPUT_FILE_NAME);
         for (ReduceNode node : reduceNodes)
             writer.write(node.getReducedData());
         writer.close();
 
+        this.endTime = System.currentTimeMillis();
+
+        System.out.println("\nGenerating and writing performance analysis to file...");
         String performanceString = generatePerformanceAnalysisString();
         System.out.println(performanceString);
 
@@ -85,15 +106,6 @@ public class Job implements java.io.Serializable {
         input = words;
     }
 
-    private void assignReducePorts() {
-        reducePorts = new int[reduceNodes.length];
-
-        int port = config.getReduceServerPort();
-        for (int i = 0; i < reducePorts.length; i++) {
-            reducePorts[i] = port++;
-        }
-    }
-
     private void createMapNodes() {
         // TODO: only create needed nodes
         double count = input.size();
@@ -112,10 +124,31 @@ public class Job implements java.io.Serializable {
                     input.subList(startIndex, endIndex).toArray(new String[0])
             );
 
-            mapNodes[i].run();
-
             startIndex = endIndex;
         }
+    }
+
+    private void runNodes(Node[] nodes) {
+        Thread[] threads = new Thread[nodes.length];
+
+        for (int i = 0; i < nodes.length; i++) {
+            Node node = nodes[i];
+
+            threads[i] = new Thread () {
+              public void run() {
+                  node.run();
+              }
+            };
+
+            threads[i].start();
+        }
+
+        for (Thread t : threads)
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
     }
 
     private Pair[] combineData() {
@@ -137,7 +170,7 @@ public class Job implements java.io.Serializable {
                 }
         }
 
-        // conver HashMap to an array of pairs
+        // Convert HashMap to an array of pairs
         for (String key : combineMap.keySet()) {
             list.add(
                     new Pair(key, combineMap.get(key).toArray(new Object[0]))
@@ -172,15 +205,9 @@ public class Job implements java.io.Serializable {
                     port++,
                     send
                     );
-            reduceNodes[i].run();
 
             startIndex = endIndex;
         }
-    }
-
-    private void stopNodes(Node[] nodes) {
-        for (Node n : nodes)
-            n.destroy();
     }
 
     private String generatePerformanceAnalysisString() {
@@ -201,6 +228,12 @@ public class Job implements java.io.Serializable {
             s.append(
                     String.format("\tReduceNode[%d]: %s%n", i, reduceNodes[i].getExcecutionTimeFormated())
             );
+
+
+        s.append("\n");
+        s.append(
+                String.format("Execution time of entire system: %s%n", this.getFullTime())
+        );
 
         s.append("\n");
 
@@ -240,5 +273,14 @@ public class Job implements java.io.Serializable {
             );
 
         return s.toString();
+    }
+
+    private String getFullTime() {
+        long time = this.endTime - this.startTime;
+
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(time);
+        long milliseconds = time - TimeUnit.SECONDS.toMillis(seconds);
+
+        return String.format("%d.%d", seconds, milliseconds);
     }
 }

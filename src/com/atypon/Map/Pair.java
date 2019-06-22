@@ -37,9 +37,9 @@ public class Pair implements Serializable, Comparable<Pair>{
     public String toString() {
         // Format "value" as array if it is
         if (isArray(value))
-            return String.format("{%s, %s}", key, Arrays.toString((Object[]) value));
+            return String.format("%s,%s", key, Arrays.toString((Object[]) value));
 
-        return String.format("{%s, %s}", key, value);
+        return String.format("%s,%s", key, value);
     }
 
     @Override

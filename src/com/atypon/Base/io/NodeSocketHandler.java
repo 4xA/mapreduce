@@ -1,7 +1,7 @@
-package com.atypon.MapReduce.io;
+package com.atypon.Base.io;
 
 import com.atypon.Globals;
-import com.atypon.MapReduce.node.Node;
+import com.atypon.Base.node.Node;
 
 import java.io.*;
 import java.net.ConnectException;
@@ -114,7 +114,7 @@ public class NodeSocketHandler {
         try {
             this.objIn = new ObjectInputStream(this.clientSocket.getInputStream());
         } catch (IOException e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 

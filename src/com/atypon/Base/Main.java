@@ -1,8 +1,8 @@
-package com.atypon.MapReduce;
+package com.atypon.Base;
 
 import com.atypon.Globals;
-import com.atypon.MapReduce.core.Job;
-import com.atypon.MapReduce.core.JobConfig;
+import com.atypon.Base.core.Job;
+import com.atypon.Base.core.JobConfig;
 
 public class Main {
     public static void main(String[] args) {
@@ -11,8 +11,8 @@ public class Main {
         config.setInputMethod(JobConfig.FILE);
         config.setFileName(Globals.INPUT_FILE_NAME);
         config.setSplitterRegex("[a-zA-Z]+");
-        config.setMapNodesCount(2);
-        config.setReduceNodesCount(7);
+        config.setMapNodesCount(4);
+        config.setReduceNodesCount(2);
         config.setMapServerPort(6000);
         config.setReduceServerPort(10000);
 

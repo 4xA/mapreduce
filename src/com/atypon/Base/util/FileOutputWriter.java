@@ -1,6 +1,4 @@
-package com.atypon.MapReduce.util;
-
-import com.atypon.Globals;
+package com.atypon.Base.util;
 
 import java.io.IOException;
 import java.io.PrintWriter;

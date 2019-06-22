@@ -1,7 +1,7 @@
-package com.atypon.MapReduce.node;
+package com.atypon.Base.node;
 
 import com.atypon.Globals;
-import com.atypon.MapReduce.io.NodeSocketHandler;
+import com.atypon.Base.io.NodeSocketHandler;
 
 import java.io.*;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +38,8 @@ public class Node {
 
         this.socketHandler = new NodeSocketHandler(this);
     }
+
+    public void run() {}
 
     public void createSocketHandler() {
         // TODO: this function must be used carfuly. Review.

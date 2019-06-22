@@ -1,4 +1,4 @@
-package com.atypon.MapReduce.node;
+package com.atypon.Base.node;
 
 import com.atypon.Globals;
 import com.atypon.Map.MapperServer;
@@ -6,7 +6,7 @@ import com.atypon.Map.Pair;
 
 import java.io.IOException;
 
-public class MapNode extends Node implements java.io.Serializable {
+public class MapNode extends Node {
     private String[] data;
     private Pair[] mappedData;
     private int[] ports;
@@ -16,6 +16,7 @@ public class MapNode extends Node implements java.io.Serializable {
         this.data = data;
     }
 
+    @Override
     public void run() {
         createMapNodeSafe();
         sendData();

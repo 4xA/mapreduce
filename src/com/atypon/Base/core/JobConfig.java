@@ -1,6 +1,6 @@
-package com.atypon.MapReduce.core;
+package com.atypon.Base.core;
 
-public class JobConfig implements java.io.Serializable {
+public class JobConfig {
     public static final int FILE = 0;
     public static final int DEFAULT = FILE;
 

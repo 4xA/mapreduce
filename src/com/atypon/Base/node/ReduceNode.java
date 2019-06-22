@@ -1,4 +1,4 @@
-package com.atypon.MapReduce.node;
+package com.atypon.Base.node;
 
 import com.atypon.Globals;
 import com.atypon.Map.Pair;
@@ -6,7 +6,7 @@ import com.atypon.Reduce.ReduceServer;
 
 import java.io.IOException;
 
-public class ReduceNode extends Node implements java.io.Serializable {
+public class ReduceNode extends Node {
     Pair[] mappedData;
     Pair[] reducedData;
 
@@ -15,6 +15,7 @@ public class ReduceNode extends Node implements java.io.Serializable {
         this.mappedData = mappedData;
     }
 
+    @Override
     public void run() {
         this.setStartTime(System.currentTimeMillis());
 

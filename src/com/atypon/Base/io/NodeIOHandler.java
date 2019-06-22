@@ -1,6 +1,6 @@
-package com.atypon.MapReduce.io;
+package com.atypon.Base.io;
 
-import com.atypon.MapReduce.node.Node;
+import com.atypon.Base.node.Node;
 
 import java.io.*;
 import java.util.ArrayList;

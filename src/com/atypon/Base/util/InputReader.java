@@ -1,4 +1,4 @@
-package com.atypon.MapReduce.util;
+package com.atypon.Base.util;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
