@@ -5,10 +5,10 @@ import com.atypon.Map.Pair;
 import com.atypon.Reduce.ReduceServer;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class ReduceNode extends Node implements java.io.Serializable {
     Pair[] mappedData;
+    Pair[] reducedData;
 
     public ReduceNode(int port, Pair[] mappedData) {
         super(port);
@@ -22,7 +22,7 @@ public class ReduceNode extends Node implements java.io.Serializable {
 
         Object o;
         while (! ( o = receiveData() ).equals(Globals.EOF_MSG))
-            System.out.println(Arrays.toString((Object[]) o));
+            this.reducedData = (Pair[]) o;
     }
 
     public void createReduceNode() throws IOException {
@@ -60,6 +60,10 @@ public class ReduceNode extends Node implements java.io.Serializable {
     public void destroy() {
         this.send(Globals.END_MSG);
         super.destroy();
+    }
+
+    public Pair[] getReducedData() {
+        return reducedData;
     }
 
     @Override

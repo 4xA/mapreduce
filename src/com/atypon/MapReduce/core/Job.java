@@ -1,20 +1,14 @@
 package com.atypon.MapReduce.core;
 
-import com.atypon.Globals;
 import com.atypon.Map.Pair;
 import com.atypon.MapReduce.node.MapNode;
 import com.atypon.MapReduce.node.Node;
 import com.atypon.MapReduce.node.ReduceNode;
+import com.atypon.MapReduce.util.FileOutputWriter;
 import com.atypon.MapReduce.util.InputReader;
 import com.atypon.MapReduce.util.Splitter;
 
-import javax.rmi.ssl.SslRMIClientSocketFactory;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Job implements java.io.Serializable {
     private JobConfig config;
@@ -58,11 +52,20 @@ public class Job implements java.io.Serializable {
         // Create ReduceNodes Nodes
         createReduceNodes();
 
-        assignReducePorts();
-
+        for (ReduceNode node : reduceNodes)
+            for (Pair p : node.getReducedData())
+                System.out.println(p);
+//            System.out.println(Arrays.toString(node.getReducedData()));
 
         stopNodes(mapNodes);
         stopNodes(reduceNodes);
+
+        // Write output to file
+        FileOutputWriter writer = new FileOutputWriter();
+        for (ReduceNode node : reduceNodes)
+            writer.write(node.getReducedData());
+
+        writer.close();
     }
 
     private void readInput() {
@@ -112,7 +115,7 @@ public class Job implements java.io.Serializable {
     }
 
     private Pair[] combineData() {
-        ArrayList<Pair> list = new ArrayList<Pair>();
+        LinkedList<Pair> list = new LinkedList<Pair>();
 
         HashMap<String, ArrayList<Object>> combineMap = new HashMap<String, ArrayList<Object>>();
 
@@ -137,7 +140,10 @@ public class Job implements java.io.Serializable {
             );
         }
 
-        return list.toArray(new Pair[0]);
+        Pair[] ret = list.toArray(new Pair[0]);
+        Arrays.sort(ret);
+
+        return ret;
     }
 
     private void createReduceNodes()  {

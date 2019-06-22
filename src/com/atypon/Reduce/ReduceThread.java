@@ -7,10 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 
 public class ReduceThread extends Thread {
     private Socket clientSocket;
@@ -24,7 +22,6 @@ public class ReduceThread extends Thread {
     @Override
     public void run() {
         try {
-
             System.out.println("connected...");
 
             objOut = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -52,7 +49,7 @@ public class ReduceThread extends Thread {
         Object input;
         Pair p;
 
-        ArrayList<Pair> list = new ArrayList<Pair>();
+        LinkedList<Pair> list = new LinkedList<>();
 
         while (true) {
             try {
