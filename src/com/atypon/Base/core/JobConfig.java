@@ -1,11 +1,20 @@
 package com.atypon.Base.core;
 
+/**
+ * JobConfig is an information class that
+ * encapsulates all the configurations and
+ * pre-requirements needed by a MapReduce
+ * Job.
+ * @author Asa Abbad
+ */
 public class JobConfig {
     public static final int FILE = 0;
     public static final int DEFAULT = FILE;
 
     private int inputMethod;
-    private String fileName;
+    private String inputFileName;
+    private String outputFileName;
+    private String performanceFileName;
     private String[] splitters;
     private String splitterRegex;
     private int mapNodesCount;
@@ -13,14 +22,22 @@ public class JobConfig {
     private int mapServerPort;
     private int reduceServerPort;
 
+    /**
+     * Instantiate a configuration
+     */
     public JobConfig() {
         inputMethod = DEFAULT;
-        fileName = null;
+        inputFileName = null;
+        outputFileName = null;
         splitters = new String[0];
         splitterRegex = "";
         mapNodesCount = 0;
     }
 
+    /**
+     * Set method of input
+     * @param inputMethod   input type
+     */
     public void setInputMethod(int inputMethod) {
         if (inputMethod != FILE)
             throw new IllegalArgumentException("unsupported read method");
@@ -28,11 +45,19 @@ public class JobConfig {
         this.inputMethod = inputMethod;
     }
 
-    public void setFileName(String fileName) {
-        if (fileName == null)
+    public void setInputFileName(String inputFileName) {
+        if (inputFileName == null)
             throw new IllegalArgumentException();
 
-        this.fileName = fileName;
+        this.inputFileName = inputFileName;
+    }
+
+    public void setOutputFileName(String outputFileName) {
+        this.outputFileName = outputFileName;
+    }
+
+    public void setPerformanceFileName(String performanceFileName) {
+        this.performanceFileName = performanceFileName;
     }
 
     public void setSplitters(String ...splitters) {
@@ -63,8 +88,16 @@ public class JobConfig {
         return inputMethod;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getInputFileName() {
+        return this.inputFileName;
+    }
+
+    public String getOutputFileName() {
+        return outputFileName;
+    }
+
+    public String getPerformanceFileName() {
+        return performanceFileName;
     }
 
     public String[] getSplitters() {

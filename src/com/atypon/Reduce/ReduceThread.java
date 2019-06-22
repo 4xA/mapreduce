@@ -1,7 +1,7 @@
 package com.atypon.Reduce;
 
 import com.atypon.Globals;
-import com.atypon.Map.Pair;
+import com.atypon.Base.util.Pair;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -12,6 +12,10 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+/**
+ * Reduce server thread.
+ * @author Asa Abbad
+ */
 public class ReduceThread extends Thread {
     private Socket clientSocket;
     private ObjectInputStream objIn;
@@ -41,12 +45,21 @@ public class ReduceThread extends Thread {
         }
     }
 
-    public void closeServer() throws IOException {
+    /**
+     * Release resources held by server
+     * @throws IOException
+     */
+    private void closeServer() throws IOException {
         objIn.close();
         objOut.close();
         clientSocket.close();
     }
 
+    /**
+     * Perform all IO operations for server
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private void doIO() throws IOException, ClassNotFoundException {
         Object input;
         Pair p;
@@ -84,6 +97,11 @@ public class ReduceThread extends Thread {
         }
     }
 
+    /**
+     * Perform reduce operation
+     * @param pairs
+     * @return
+     */
     private Pair[] reduce(Pair[] pairs) {
         Pair[] ret = new Pair[pairs.length];
 

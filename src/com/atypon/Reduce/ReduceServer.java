@@ -3,6 +3,11 @@ package com.atypon.Reduce;
 import java.io.*;
 import java.net.ServerSocket;
 
+/**
+ * {@link ReduceServer} is the low-level server
+ * running as a ReduceNode.
+ * @author Asa Abbad
+ */
 public class ReduceServer {
     public static void main(String[] args) {
         int port = Integer.parseInt(args[0]);

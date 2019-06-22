@@ -1,12 +1,25 @@
-package com.atypon.Map;
+package com.atypon.Base.util;
+
+import com.atypon.Map.Mapper;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
+/**
+ * {@link Pair} represents data both in the {@link Mapper#map(String)}
+ * operation and the {@link com.atypon.Reduce.Reducer#reduce(String, Object[])}
+ * operation.
+ * @author Asa Abbad
+ */
 public class Pair implements Serializable, Comparable<Pair>{
     private String key;
     private Object value;
 
+    /**
+     * Instantiate with string-value pair
+     * @param key
+     * @param value
+     */
     public Pair(String key, Object value) {
         this.key = key;
 

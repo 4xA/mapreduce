@@ -9,7 +9,9 @@ public class Main {
         JobConfig config = new JobConfig();
 
         config.setInputMethod(JobConfig.FILE);
-        config.setFileName(Globals.INPUT_FILE_NAME);
+        config.setInputFileName(Globals.INPUT_FILE_NAME);
+        config.setOutputFileName(Globals.OUTPUT_FILE_NAME);
+        config.setPerformanceFileName(Globals.PERFORMANCE_FILE_NAME);
         config.setSplitterRegex("[a-zA-Z]+");
         config.setMapNodesCount(4);
         config.setReduceNodesCount(2);

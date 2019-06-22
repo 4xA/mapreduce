@@ -6,9 +6,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * {@link InputReader} is a utility class
+ * responsible for reading from input file.
+ * @author  Asa Abbad
+ */
 public class InputReader {
     private InputReader() {}
 
+    /**
+     * Read lines from input file.
+     * @param fileName  Name of input file
+     * @return  {@link ArrayList} representing file
+     */
     public static ArrayList<String> readLinesFromFile(String fileName) {
         ArrayList<String> list = new ArrayList<String>();
 

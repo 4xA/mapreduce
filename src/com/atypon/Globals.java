@@ -1,5 +1,11 @@
 package com.atypon;
 
+/**
+ * {@link Globals} class is a constants-only
+ * file used for globalizing all the needed
+ * information across the system.
+ * @author Asa Abbad
+ */
 public class Globals {
     public static final String INPUT_FILE_NAME = "input.txt";
     public static final String OUTPUT_FILE_NAME = "output.txt";

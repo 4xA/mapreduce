@@ -1,5 +1,6 @@
 package com.atypon.Map;
 
+import com.atypon.Base.util.Pair;
 import com.atypon.Globals;
 
 import java.io.*;
@@ -10,6 +11,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * {@link MapperServer} is the low-level server
+ * running as a MapNode.
+ * @author Asa Abbad
+ */
 public class MapperServer {
     private ServerSocket serverSocket;
     private Socket clientSocket;
@@ -20,6 +26,11 @@ public class MapperServer {
 
     private Pair[] mappedData;
 
+    /**
+     * Excecute server operations
+     * @param port  port at which server will be listening
+     * @throws IOException  if port is busy
+     */
     public void start(int port) throws IOException {
         try {
             serverSocket = new ServerSocket(port);
@@ -44,6 +55,10 @@ public class MapperServer {
         stop();
     }
 
+    /**
+     * Release resources held by server
+     * @throws IOException
+     */
     public void stop() throws IOException {
         in.close();
         objOut.close();
@@ -51,6 +66,11 @@ public class MapperServer {
         serverSocket.close();
     }
 
+    /**
+     * Perform read operations
+     * @return  {String}[] data read from base program
+     * @throws IOException
+     */
     private String[] read() throws IOException {
         ArrayList<String> list = new ArrayList<String>();
 
@@ -87,6 +107,11 @@ public class MapperServer {
         return list.toArray(new String[0]);
     }
 
+    /**
+     * Perform map operation using {@link Mapper#map(String)}
+     * @param keys  keys to be mapped
+     * @return  Mapped data
+     */
     private Pair[] map(String[] keys) {
         Pair[] ret = new Pair[keys.length];
 

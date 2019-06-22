@@ -1,7 +1,6 @@
 package com.atypon.Base.core;
 
-import com.atypon.Globals;
-import com.atypon.Map.Pair;
+import com.atypon.Base.util.Pair;
 import com.atypon.Base.node.MapNode;
 import com.atypon.Base.node.Node;
 import com.atypon.Base.node.ReduceNode;
@@ -12,6 +11,12 @@ import com.atypon.Base.util.Splitter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Job is a representation of a complete
+ * task given to the MapReduce system. It
+ * is also the entry point of MapReduce.
+ * @author  Asa Abbad
+ */
 public class Job {
     private JobConfig config;
     private ArrayList<String> input;
@@ -21,12 +26,19 @@ public class Job {
     private long startTime;
     private long endTime;
 
+    /**
+     * Instantiate {@link Job} object with specified arguments
+     * @param config     {@link JobConfig} Job configuration class
+     */
     public Job(JobConfig config) {
         this.config = config;
         mapNodes = new MapNode[this.config.getMapNodesCount()];
         reduceNodes = new ReduceNode[this.config.getReduceNodesCount()];
     }
 
+    /**
+     * Entry point of MapReduce system
+     */
     public void start() {
         this.startTime = System.currentTimeMillis();
 
@@ -77,7 +89,7 @@ public class Job {
 
         // Write output to file
         System.out.println("\nWriting to output file...");
-        FileOutputWriter writer = new FileOutputWriter(Globals.OUTPUT_FILE_NAME);
+        FileOutputWriter writer = new FileOutputWriter(config.getOutputFileName());
         for (ReduceNode node : reduceNodes)
             writer.write(node.getReducedData());
         writer.close();
@@ -88,13 +100,13 @@ public class Job {
         String performanceString = generatePerformanceAnalysisString();
         System.out.println(performanceString);
 
-        writer = new FileOutputWriter(Globals.PERFORMANCE_FILE_NAME);
+        writer = new FileOutputWriter(config.getPerformanceFileName());
         writer.write(performanceString);
         writer.close();
     }
 
     private void readInput() {
-        input = InputReader.readLinesFromFile(config.getFileName());
+        input = InputReader.readLinesFromFile(config.getInputFileName());
     }
 
     private void splitInput() {

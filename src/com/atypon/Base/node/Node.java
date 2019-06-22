@@ -6,6 +6,12 @@ import com.atypon.Base.io.NodeSocketHandler;
 import java.io.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * {@link Node} is a representation of a
+ * MapReduce server. Simplifying creation,
+ * access and deletion.
+ * @author Asa Abbad
+ */
 public class Node {
     private Process process;
     private int port;
@@ -14,12 +20,22 @@ public class Node {
     private long endTime;
     private long heapMemoryUsed;
 
+    /**
+     * Instantiate {@link Node} class
+     * @param port  Port at which server should listen
+     */
     public Node(int port) {
         this.port = port;
     }
 
     // process is not created at object instantiation
     // for performance optimization
+    /**
+     * Create the server as a process and pass
+     * all necessary information to the server.
+     * @param klass Class to be created. <b>Note: must contain a main method</b>
+     * @throws IOException  if process could not be created by JVM
+     */
     protected void createProcess(Class klass) throws IOException {
         String binPath = System.getProperty("java.home");
 
@@ -39,10 +55,20 @@ public class Node {
         this.socketHandler = new NodeSocketHandler(this);
     }
 
+    /**
+     * Run server and perform all operations from start to completion
+     */
     public void run() {}
 
+    /**
+     * Create a {@link NodeSocketHandler} or recreate it.
+     * <p>
+     *     This method should be used to run the server
+     *     manually without relying on {@link Node#run()}.
+     * </p>
+     */
     public void createSocketHandler() {
-        // TODO: this function must be used carfuly. Review.
+        // TODO: this function must be used carefuly. Review.
         this.socketHandler = new NodeSocketHandler(this);
     }
 
@@ -66,6 +92,10 @@ public class Node {
         return endTime;
     }
 
+    /**
+     * Generate excecution time in the format <b>Seconds.Milliseconds</b>
+     * @return  {@link String} representing execution time.
+     */
     public String getExcecutionTimeFormated() {
         long time = endTime - startTime;
 
@@ -75,6 +105,10 @@ public class Node {
         return String.format("%d.%d", seconds, milliseconds);
     }
 
+    /**
+     * Get heap memory used in <b>bytes</b>
+     * @return Heap memory used in <b>bytes</b>
+     */
     public long getHeapMemoryUsed() {
         return heapMemoryUsed;
     }
@@ -96,25 +130,47 @@ public class Node {
     }
 
     // Server operations
-    public void sendText(String[] l) {
-        socketHandler.writeTextToProcess(l);
+
+    /**
+     * Send array of {@link String} over socket.
+     * @param text  Array of {@link String} to be sent
+     */
+    public void sendText(String[] text) {
+        socketHandler.writeTextToProcess(text);
         sendSignal(Globals.EOI_MSG);
     }
 
+    /**
+     * Send {@link Object} over socket
+     * @param object    {@link Object} to be sent
+     */
     public void send(Object object) {
         socketHandler.writeToProcess(object);
     }
 
+    /**
+     * Send a command signal to teh socket
+     * @param signal    Server command signal
+     */
     public void sendSignal(String signal) {
         socketHandler.writeTextToProcess(
                 new String[] { signal }
          );
     }
 
+    /**
+     * Receive {@link Object} from socket.
+     * @return  {@link Object} from server
+     */
     public Object receive() {
         return socketHandler.readObjectFromProcess();
     }
 
+    /**
+     * Destroying {@link Node} includes releasing
+     * held resources and killing process running
+     * the server.
+     */
     public void destroy() {
         socketHandler.end();
         this.process.destroyForcibly();
